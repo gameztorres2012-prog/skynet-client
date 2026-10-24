@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skynet - Tactical Interface</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            background-color: #050505;
+            color: #ff3333;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        .container {
+            text-align: center;
+            border: 2px solid #ff3333;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.4);
+            background: rgba(15, 0, 0, 0.8);
+            max-width: 90vw;
+        }
+        h1 {
+            font-size: 1.5rem;
+            letter-spacing: 3px;
+            margin-bottom: 10px;
+        }
+        .avatar-box {
+            width: 200px;
+            height: 200px;
+            border: 2px dashed #ff3333;
+            margin: 0 auto 20px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            background: radial-gradient(circle, rgba(50,0,0,1) 0%, rgba(5,5,5,1) 80%);
+        }
+        .avatar-placeholder {
+            font-size: 14px;
+            color: #ff9999;
+            text-align: center;
+            padding: 10px;
+        }
+        .status-box {
+            margin-top: 15px;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+        .btn-voz {
+            margin-top: 20px;
+            background: #ff3333;
+            color: #000;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 0 10px #ff3333;
+        }
+        .btn-voz:active {
+            background: #990000;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>CYBERDYNE SYSTEMS // SKYNET</h1>
+        
+        <div class="avatar-box">
+            <div class="avatar-placeholder">
+                [PROYECCIÓN HOLOGRÁFICA]<br><strong>SKYNET (REINA ROJA)</strong>
+            </div>
+        </div>
+
+        <div class="status-box" id="estado-texto">SISTEMA EN ESPERA...</div>
+        
+        <button class="btn-voz" onclick="activarMicrofono()">🎙️ Hablar con Skynet</button>
+    </div>
+
+    <script>
+        // Conexión automática a tu servidor en Render
+        const socket = io("https://skynet-core.onrender.com");
+
+        const tipoDispositivo = "tablet_maestra"; 
+        socket.emit('REGISTRAR_DISPOSITIVO', tipoDispositivo);
+
+        socket.on('connect', () => {
+            document.getElementById('estado-texto').innerText = "SISTEMA ONLINE - CONECTADO A LA RED";
+        });
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition;
+
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.lang = 'es-ES';
+            recognition.continuous = false;
+            recognition.interimResults = false;
+
+            recognition.onstart = () => {
+                document.getElementById('estado-texto').innerText = "ESCUCHANDO COMANDO...";
+            };
+
+            recognition.onresult = (event) => {
+                const textoTranscrito = event.results[0][0].transcript.toLowerCase();
+                document.getElementById('estado-texto').innerText = `VOZ CAPTURADA: "${textoTranscrito}"`;
+
+                socket.emit('COMANDO_VOZ_RECIBIDO', {
+                    textoComando: textoTranscrito,
+                    biometriaVozValida: true 
+                });
+            };
+
+            recognition.onerror = (event) => {
+                document.getElementById('estado-texto').innerText = "ERROR DE AUDIO: " + event.error;
+            };
+        } else {
+            alert("Usa Google Chrome en tu tablet para el reconocimiento de voz.");
+        }
+
+        function activarMicrofono() {
+            if (recognition) {
+                try {
+                    recognition.start();
+                } catch (e) {
+                    console.log("El reconocimiento ya está activo.");
+                }
+            }
+        }
+
+        socket.on('RESPUESTA_SKYNET', (data) => {
+            document.getElementById('estado-texto').innerText = "SKYNET: " + data.audioTexto;
+            
+            const utterance = new SpeechSynthesisUtterance(data.audioTexto);
+            utterance.lang = 'es-ES';
+            utterance.rate = 0.9;
+            window.speechSynthesis.speak(utterance);
+        });
+
+        socket.on('CLEAN_EXIT', () => {
+            alert("PROTOCOLO DE SALIDA EJECUTADO EN NODOS REMOTOS.");
+            window.location.href = "about:blank"; 
+        });
+    </script>
+
+</body>
+</html>
