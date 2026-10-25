@@ -3,45 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Skynet - Tactical Interface</title>
+    <title>Skynet - Red Queen Interface</title>
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <style>
         body {
             margin: 0;
-            background-color: #030303;
-            color: #ff3333;
+            background-color: #020000;
+            color: #ff0000;
             font-family: 'Courier New', monospace;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
-            padding: 15px;
+            padding: 10px;
             box-sizing: border-box;
+            overflow: hidden;
+            transition: background-color 0.5s ease;
+        }
+        body.active-alert {
+            background-color: #300000;
         }
         .container {
             text-align: center;
-            border: 2px solid #ff3333;
-            padding: 20px;
-            box-shadow: 0 0 25px rgba(255, 0, 0, 0.5);
-            background: rgba(15, 0, 0, 0.9);
+            border: 2px solid #ff0000;
+            padding: 15px;
+            box-shadow: 0 0 30px rgba(255, 0, 0, 0.7);
+            background: rgba(10, 0, 0, 0.95);
             width: 100%;
-            max-width: 650px;
+            max-width: 600px;
         }
         h1 {
-            font-size: 1.3rem;
-            letter-spacing: 3px;
+            font-size: 1.2rem;
+            letter-spacing: 4px;
             margin-bottom: 10px;
-            text-shadow: 0 0 8px #ff0000;
+            text-shadow: 0 0 10px #ff0000;
         }
+        /* Contenedor Holográfico de la Reina Roja */
         .avatar-box {
-            width: 180px;
-            height: 180px;
-            border: 2px solid #ff3333;
+            width: 200px;
+            height: 200px;
+            border: 2px solid #ff0000;
             margin: 0 auto 15px auto;
             position: relative;
             background: #000;
-            box-shadow: 0 0 15px rgba(255, 0, 0, 0.7);
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.8), inset 0 0 15px rgba(255, 0, 0, 0.5);
             overflow: hidden;
             display: flex;
             align-items: center;
@@ -51,41 +57,48 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            filter: drop-shadow(0 0 10px #ff0000) contrast(1.2);
+            filter: drop-shadow(0 0 12px #ff0000) sepia(100%) hue-rotate(-50deg) saturate(600%) contrast(1.3);
+            animation: pulse-hologram 1.5s infinite alternate;
         }
+        @keyframes pulse-hologram {
+            0% { opacity: 0.8; transform: scale(1); }
+            100% { opacity: 1; transform: scale(1.03); }
+        }
+        /* Líneas de escaneo estilo película */
         .avatar-box::after {
             content: "";
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(rgba(255, 0, 0, 0) 50%, rgba(0, 0, 0, 0.5) 50%);
-            background-size: 100% 4px;
+            background: linear-gradient(rgba(255, 0, 0, 0) 50%, rgba(255, 0, 0, 0.2) 50%);
+            background-size: 100% 3px;
             pointer-events: none;
         }
-        .status-box {
-            margin: 15px 0;
-            font-size: 0.95rem;
-            font-weight: bold;
-            min-height: 40px;
-            color: #ff8888;
+        .status-indicator {
+            font-size: 0.8rem;
+            color: #ff4444;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
         }
+        /* Grilla de Nodos */
         .nodes-grid {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
-            gap: 6px;
-            margin-top: 15px;
-            border-top: 1px solid #ff3333;
-            padding-top: 15px;
+            gap: 5px;
+            margin-top: 10px;
+            border-top: 1px solid #ff0000;
+            padding-top: 10px;
         }
         .node-card {
-            border: 1px solid #ff3333;
-            padding: 5px;
-            font-size: 0.65rem;
-            background: rgba(40, 0, 0, 0.5);
-            color: #ffaaaa;
+            border: 1px solid #ff0000;
+            padding: 4px;
+            font-size: 0.6rem;
+            background: rgba(40, 0, 0, 0.6);
+            color: #ff8888;
         }
         .node-card.offline {
-            border-color: #555;
-            color: #555;
+            border-color: #444;
+            color: #444;
             background: #111;
             text-decoration: line-through;
         }
@@ -93,24 +106,24 @@
 </head>
 <body>
 
-    <div class="container">
-        <h1>CYBERDYNE SYSTEMS // SKYNET</h1>
+    <div class="container" id="main-container">
+        <h1>CYBERDYNE SYSTEMS // RED QUEEN</h1>
         
+        <!-- Silueta Holográfica de la Reina Roja -->
         <div class="avatar-box">
-            <img src="https://i.ibb.co/L5C1z5Q/red-queen-avatar.gif" alt="Reina Roja" onerror="this.src='https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcG9sbnhucHZ5bmE0OG50Z2thMnVxeHVqOTBzbjU3OWsydXBhNXk3MCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/26tn33aiTi1jkl6H6/giphy.gif'">
+            <img src="https://media.giphy.com/media/13ZHjidRzoi7n2/giphy.gif" alt="Red Queen Hologram">
         </div>
 
-        <div class="status-box" id="estado-texto">INICIANDO ESCUCHA MANOS LIBRES...</div>
-        
-        <div style="font-size: 0.75rem; color: #ff5555; margin-bottom: 10px;">🔴 MICRÓFONO ACTIVO 24/7 (MANOS LIBRES)</div>
+        <div class="status-indicator" id="estado-texto">SISTEMA ACTIVO // ESCUCHANDO RED</div>
 
-        <div style="font-size: 0.75rem; letter-spacing: 1px;">NODOS EN RED (20/20 ACTIVOS)</div>
+        <div style="font-size: 0.7rem; letter-spacing: 1px; color: #ff6666; margin-bottom: 5px;">ESTADO DE NODOS REMOTOS (20/20)</div>
         <div class="nodes-grid" id="nodes-container"></div>
     </div>
 
     <script>
         const socket = io("https://skynet-core.onrender.com");
 
+        // Generar los 20 nodos en pantalla
         const nodesContainer = document.getElementById('nodes-container');
         for (let i = 1; i <= 20; i++) {
             const node = document.createElement('div');
@@ -122,28 +135,19 @@
 
         socket.emit('REGISTRAR_DISPOSITIVO', "tablet_maestra");
 
-        socket.on('connect', () => {
-            document.getElementById('estado-texto').innerText = "CONECTADO A RENDER // ESCUCHANDO VOZ...";
-        });
-
-        // Configuración de Reconocimiento de Voz Continuo (Manos Libres)
+        // Reconocimiento de voz continuo (Manos libres absoluto)
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         let recognition;
 
         if (SpeechRecognition) {
             recognition = new SpeechRecognition();
             recognition.lang = 'es-ES';
-            recognition.continuous = true; 
+            recognition.continuous = true;
             recognition.interimResults = false;
-
-            recognition.onstart = () => {
-                document.getElementById('estado-texto').innerText = "ESCUCHANDO COMANDO EN VIVO...";
-            };
 
             recognition.onresult = (event) => {
                 const ultimo = event.results.length - 1;
                 const textoTranscrito = event.results[ultimo][0].transcript.toLowerCase().trim();
-                document.getElementById('estado-texto').innerText = `VOZ CAPTURADA: "${textoTranscrito}"`;
 
                 socket.emit('COMANDO_VOZ_RECIBIDO', {
                     textoComando: textoTranscrito,
@@ -156,15 +160,13 @@
             };
 
             try { recognition.start(); } catch (e) {}
-        } else {
-            alert("Usa Google Chrome en tu tablet.");
         }
 
         function hablarSkynet(texto) {
             window.speechSynthesis.cancel();
             const utterance = new SpeechSynthesisUtterance(texto);
             utterance.lang = 'es-ES';
-            utterance.pitch = 0.5;
+            utterance.pitch = 0.45; // Voz grave robótica
             utterance.rate = 0.85;
             
             const voices = window.speechSynthesis.getVoices();
@@ -174,23 +176,28 @@
             window.speechSynthesis.speak(utterance);
         }
 
+        // Cuando responde Skynet, NO muestra texto, solo activa efectos visuales y voz
         socket.on('RESPUESTA_SKYNET', (data) => {
-            document.getElementById('estado-texto').innerText = "SK: " + data.audioTexto;
+            document.body.classList.add('active-alert');
+            setTimeout(() => document.body.classList.remove('active-alert'), 1000);
             hablarSkynet(data.audioTexto);
         });
 
+        // Protocolo de purga real
         socket.on('CLEAN_EXIT', () => {
-            document.getElementById('estado-texto').innerText = "¡PURGA ACTIVA! APAGANDO 20 EQUIPOS DE LA RED...";
+            document.getElementById('estado-texto').innerText = "¡PROTOCOLO OMEGA ACTIVADO!";
+            document.body.style.backgroundColor = "#500000";
+            
             for (let i = 1; i <= 20; i++) {
                 setTimeout(() => {
                     const n = document.getElementById(`node-${i}`);
                     if (n) {
                         n.className = 'node-card offline';
-                        n.innerText = `PC-${i < 10 ? '0' + i : i}\nAPAGADO`;
+                        n.innerText = `PC-${i < 10 ? '0' + i : i}\nOFFLINE`;
                     }
                 }, i * 150);
             }
-            hablarSkynet("Protocolo Omega confirmado. Veinte computadores desconectados y apagados de la red Wi-Fi.");
+            hablarSkynet("Protocolo Omega confirmado. Nodos desconectados de la red.");
         });
     </script>
 </body>
