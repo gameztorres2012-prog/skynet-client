@@ -42,7 +42,7 @@
             width: 100%;
             height: 100%;
             object-fit: contain;
-            filter: drop-shadow(0 0 20px #ff0000) contrast(1.2);
+            filter: drop-shadow(0 0 25px #ff0000) sepia(100%) hue-rotate(-50deg) saturate(600%) contrast(1.4);
             animation: pulse-hologram 2s infinite alternate;
         }
 
@@ -77,7 +77,7 @@
             border: 1px solid #ff0000;
             padding: 10px;
             box-shadow: 0 0 20px rgba(255, 0, 0, 0.6);
-            display: none; /* Se activa por voz */
+            display: none;
             opacity: 0;
             transition: opacity 0.5s ease-in-out;
         }
@@ -113,9 +113,9 @@
 </head>
 <body>
 
-    <!-- Holograma de la Reina Roja sin recuadro -->
+    <!-- Holograma con enlace directo garantizado -->
     <div class="hologram-container">
-        <img src="reina.webp" alt="Red Queen" onerror="this.src='https://i.postimg.co/3w51S3C7/redqueen.gif'">
+        <img src="https://media.giphy.com/media/26tn33aiTi1jkl6H6/giphy.gif" alt="Red Queen">
     </div>
 
     <!-- Malla de escaneo táctico -->
@@ -130,7 +130,6 @@
         const socket = io("https://skynet-core.onrender.com");
         const panelNodos = document.getElementById('panel-nodos');
 
-        // Crear la grilla de 20 PCs
         const nodesContainer = document.getElementById('nodes-container');
         for (let i = 1; i <= 20; i++) {
             const node = document.createElement('div');
@@ -142,7 +141,6 @@
 
         socket.emit('REGISTRAR_DISPOSITIVO', "tablet_maestra");
 
-        // Reconocimiento de voz continuo manos libres
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         let recognition;
 
@@ -156,7 +154,6 @@
                 const ultimo = event.results.length - 1;
                 const textoTranscrito = event.results[ultimo][0].transcript.toLowerCase().trim();
 
-                // Comando de voz para MOSTRAR / OCULTAR el panel de los 20 PCs
                 if (textoTranscrito.includes("mostrar nodos") || textoTranscrito.includes("mostrar equipos") || textoTranscrito.includes("estado de red")) {
                     panelNodos.classList.add('visible');
                     hablarSkynet("Desplegando estado de la red. Veinte nodos activos.");
@@ -168,7 +165,6 @@
                     return;
                 }
 
-                // Enviar otros comandos al servidor
                 socket.emit('COMANDO_VOZ_RECIBIDO', {
                     textoComando: textoTranscrito,
                     biometriaVozValida: true 
@@ -200,9 +196,8 @@
             hablarSkynet(data.audioTexto);
         });
 
-        // Al iniciar protocolo de apagado, muestra la barra y apaga los nodos
         socket.on('CLEAN_EXIT', () => {
-            panelNodos.classList.add('visible'); // Se despliega automáticamente en la purga
+            panelNodos.classList.add('visible');
             for (let i = 1; i <= 20; i++) {
                 setTimeout(() => {
                     const n = document.getElementById(`node-${i}`);
