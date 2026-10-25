@@ -2,8 +2,9 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Red Queen Core</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skynet - Red Queen Core</title>
+    <!-- Librería de WebSockets -->
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <style>
         * {
@@ -23,8 +24,6 @@
             align-items: center;
             justify-content: center;
         }
-
-        /* Proyección holográfica sin bordes ni recuadros */
         .hologram-container {
             position: absolute;
             top: 0;
@@ -32,187 +31,42 @@
             width: 100vw;
             height: 100vh;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             z-index: 1;
-            background: #000000;
         }
-
-        .hologram-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            filter: drop-shadow(0 0 20px #ff0000) contrast(1.2);
-            animation: pulse-hologram 2s infinite alternate;
-        }
-
-        @keyframes pulse-hologram {
-            0% { opacity: 0.85; transform: scale(0.99); }
-            100% { opacity: 1; transform: scale(1.01); }
-        }
-
-        /* Malla de escaneo cibernética a pantalla completa */
-        .scanlines {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            z-index: 2;
-            background: linear-gradient(rgba(255, 0, 0, 0) 50%, rgba(150, 0, 0, 0.15) 50%);
-            background-size: 100% 4px;
-            pointer-events: none;
-        }
-
-        /* Panel de los 20 PCs (OCULTO POR DEFECTO) */
-        .overlay-nodes {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 90%;
-            max-width: 850px;
-            z-index: 3;
-            background: rgba(10, 0, 0, 0.9);
-            border: 1px solid #ff0000;
-            padding: 10px;
-            box-shadow: 0 0 20px rgba(255, 0, 0, 0.6);
-            display: none; /* Se activa por voz */
-            opacity: 0;
-            transition: opacity 0.5s ease-in-out;
-        }
-
-        .overlay-nodes.visible {
-            display: block;
-            opacity: 1;
-        }
-
-        .nodes-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 6px;
-        }
-
-        .node-card {
-            border: 1px solid #ff0000;
-            padding: 6px 2px;
-            font-size: 0.6rem;
+        #subtexto {
+            margin-top: 20px;
+            font-size: 1.2rem;
             text-align: center;
-            background: rgba(50, 0, 0, 0.6);
-            color: #ffaaaa;
-            font-weight: bold;
-        }
-
-        .node-card.offline {
-            border-color: #333;
-            color: #444;
-            background: rgba(10, 10, 10, 0.9);
-            text-decoration: line-through;
+            padding: 0 20px;
         }
     </style>
 </head>
 <body>
 
-    <!-- Holograma de la Reina Roja sin recuadro -->
     <div class="hologram-container">
-        <img src="reina.webp" alt="Red Queen" onerror="this.src='https://i.postimg.co/3w51S3C7/redqueen.gif'">
-    </div>
-
-    <!-- Malla de escaneo táctico -->
-    <div class="scanlines"></div>
-
-    <!-- Panel de los 20 Nodos (Oculto hasta dar la orden de voz) -->
-    <div class="overlay-nodes" id="panel-nodos">
-        <div class="nodes-grid" id="nodes-container"></div>
+        <h1>SKYNET // RED QUEEN</h1>
+        <div id="subtexto">Sistemas en espera...</div>
     </div>
 
     <script>
-        const socket = io("https://skynet-core.onrender.com");
-        const panelNodos = document.getElementById('panel-nodos');
+        // CONÉCTATE AQUÍ CON LA URL DE TU SERVIDOR EN RENDER
+        const socket = io("https://tu-backend-en-render.onrender.com");
 
-        // Crear la grilla de 20 PCs
-        const nodesContainer = document.getElementById('nodes-container');
-        for (let i = 1; i <= 20; i++) {
-            const node = document.createElement('div');
-            node.className = 'node-card';
-            node.id = `node-${i}`;
-            node.innerText = `PC-${i < 10 ? '0' + i : i}\nONLINE`;
-            nodesContainer.appendChild(node);
-        }
-
-        socket.emit('REGISTRAR_DISPOSITIVO', "tablet_maestra");
-
-        // Reconocimiento de voz continuo manos libres
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        let recognition;
-
-        if (SpeechRecognition) {
-            recognition = new SpeechRecognition();
-            recognition.lang = 'es-ES';
-            recognition.continuous = true;
-            recognition.interimResults = false;
-
-            recognition.onresult = (event) => {
-                const ultimo = event.results.length - 1;
-                const textoTranscrito = event.results[ultimo][0].transcript.toLowerCase().trim();
-
-                // Comando de voz para MOSTRAR / OCULTAR el panel de los 20 PCs
-                if (textoTranscrito.includes("mostrar nodos") || textoTranscrito.includes("mostrar equipos") || textoTranscrito.includes("estado de red")) {
-                    panelNodos.classList.add('visible');
-                    hablarSkynet("Desplegando estado de la red. Veinte nodos activos.");
-                    return;
-                }
-                if (textoTranscrito.includes("ocultar nodos") || textoTranscrito.includes("ocultar equipos")) {
-                    panelNodos.classList.remove('visible');
-                    hablarSkynet("Ocultando panel de nodos.");
-                    return;
-                }
-
-                // Enviar otros comandos al servidor
-                socket.emit('COMANDO_VOZ_RECIBIDO', {
-                    textoComando: textoTranscrito,
-                    biometriaVozValida: true 
-                });
-            };
-
-            recognition.onend = () => {
-                try { recognition.start(); } catch (e) {}
-            };
-
-            try { recognition.start(); } catch (e) {}
-        }
-
-        function hablarSkynet(texto) {
-            window.speechSynthesis.cancel();
-            const utterance = new SpeechSynthesisUtterance(texto);
-            utterance.lang = 'es-ES';
-            utterance.pitch = 0.45;
-            utterance.rate = 0.85;
-            
-            const voices = window.speechSynthesis.getVoices();
-            const voz = voices.find(v => v.lang.includes('es') && (v.name.includes('Google') || v.name.includes('Female')));
-            if (voz) utterance.voice = voz;
-
-            window.speechSynthesis.speak(utterance);
+        function reproducirVozSkynet(urlAudio) {
+            if (!urlAudio) return;
+            const audio = new Audio(urlAudio);
+            audio.volume = 1.0;
+            audio.play().catch(error => {
+                console.log("Toque en pantalla requerido para audio:", error);
+            });
         }
 
         socket.on('RESPUESTA_SKYNET', (data) => {
-            hablarSkynet(data.audioTexto);
-        });
-
-        // Al iniciar protocolo de apagado, muestra la barra y apaga los nodos
-        socket.on('CLEAN_EXIT', () => {
-            panelNodos.classList.add('visible'); // Se despliega automáticamente en la purga
-            for (let i = 1; i <= 20; i++) {
-                setTimeout(() => {
-                    const n = document.getElementById(`node-${i}`);
-                    if (n) {
-                        n.className = 'node-card offline';
-                        n.innerText = `PC-${i < 10 ? '0' + i : i}\nOFFLINE`;
-                    }
-                }, i * 120);
-            }
-            hablarSkynet("Protocolo Omega confirmado. Veinte nodos desconectados de la red.");
+            document.getElementById('subtexto').innerText = data.texto;
+            reproducirVozSkynet(data.audioUrl);
         });
     </script>
 </body>
